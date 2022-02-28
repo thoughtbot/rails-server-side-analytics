@@ -42,4 +42,19 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
     assert_equal "desc", Event.last.params[:q][:order]
     assert_equal "GET", Event.last.method
   end
+
+  test "should filter sensative data from params" do
+    post sign_up_path, params: {
+      user: {
+        email: "user@example.com",
+        password: "password",
+        password_confirmation: "password",
+        credit_card_number: "4242 4242 4242 4242"
+      }
+    }
+
+    assert_equal "[FILTERED]", Event.last.params[:user][:password]
+    assert_equal "[FILTERED]", Event.last.params[:user][:password_confirmation]
+    assert_equal "[FILTERED]", Event.last.params[:user][:credit_card_number]
+  end
 end

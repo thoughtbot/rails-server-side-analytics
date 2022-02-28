@@ -5,4 +5,5 @@ Rails.application.routes.draw do
   root "pages#home"
   post "contacts", to: "pages#contact", as: :contact
   get "search", to: "pages#search", as: :search
+  post "sign_up", to: "pages#sign_up", as: :sign_up
 end

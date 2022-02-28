@@ -11,4 +11,7 @@ class PagesController < ApplicationController
 
   def search
   end
+
+  def sign_up
+  end
 end
