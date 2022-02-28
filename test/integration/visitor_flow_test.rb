@@ -1,9 +1,12 @@
 require "test_helper"
 
 class VisitorFlowTest < ActionDispatch::IntegrationTest
-  test "should create visitor and track their events" do
+  test "should create visitor and track their events in the background" do
     assert_difference -> { Visitor.count } => 1, -> { Event.count } => 1 do
-      get root_path, headers: {"User-Agent" => "Some User Agent"}
+      assert_enqueued_with(job: CreateEventJob) do
+        get root_path, headers: {"User-Agent" => "Some User Agent"}
+      end
+      perform_enqueued_jobs
     end
 
     assert_not_nil Visitor.last.user_agent
@@ -13,12 +16,15 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
     assert_equal "GET", Event.last.method
 
     assert_difference -> { Visitor.count } => 0, -> { Event.count } => 1 do
-      post contact_path, params: {
-        contact: {
-          email: "user@example.com",
-          name: "Some User"
+      assert_enqueued_with(job: CreateEventJob) do
+        post contact_path, params: {
+          contact: {
+            email: "user@example.com",
+            name: "Some User"
+          }
         }
-      }
+      end
+      perform_enqueued_jobs
     end
 
     assert_equal Visitor.last, Event.last.visitor
@@ -28,12 +34,15 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
     assert_equal "POST", Event.last.method
 
     assert_difference -> { Visitor.count } => 0, -> { Event.count } => 1 do
-      get search_path, params: {
-        q: {
-          name: "Some search",
-          order: "desc"
+      assert_enqueued_with(job: CreateEventJob) do
+        get search_path, params: {
+          q: {
+            name: "Some search",
+            order: "desc"
+          }
         }
-      }
+      end
+      perform_enqueued_jobs
     end
 
     assert_equal Visitor.last, Event.last.visitor
@@ -44,14 +53,18 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "should filter sensative data from params" do
-    post sign_up_path, params: {
-      user: {
-        email: "user@example.com",
-        password: "password",
-        password_confirmation: "password",
-        credit_card_number: "4242 4242 4242 4242"
+    assert_enqueued_with(job: CreateEventJob) do
+      post sign_up_path, params: {
+        user: {
+          email: "user@example.com",
+          password: "password",
+          password_confirmation: "password",
+          credit_card_number: "4242 4242 4242 4242"
+        }
       }
-    }
+    end
+
+    perform_enqueued_jobs
 
     assert_equal "[FILTERED]", Event.last.params[:user][:password]
     assert_equal "[FILTERED]", Event.last.params[:user][:password_confirmation]
