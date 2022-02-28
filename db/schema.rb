@@ -18,18 +18,17 @@ ActiveRecord::Schema[7.0].define(version: 2022_02_26_122953) do
     t.string "path", null: false
     t.string "method", null: false
     t.string "params"
-    t.string "owner_type", null: false
-    t.bigint "owner_id", null: false
+    t.bigint "visitor_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["owner_type", "owner_id"], name: "index_events_on_owner"
+    t.index ["visitor_id"], name: "index_events_on_visitor_id"
   end
 
   create_table "visitors", force: :cascade do |t|
-    t.string "ip_address"
     t.string "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "events", "visitors"
 end
