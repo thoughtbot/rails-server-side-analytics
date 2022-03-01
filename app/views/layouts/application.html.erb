@@ -12,5 +12,8 @@
 
   <body>
     <%= yield %>
+    <% unless session[:enable_analytics] == true%>
+      <%= button_to "Enable Analytics", enable_analytics_path %>
+    <% end %>
   </body>
 </html>

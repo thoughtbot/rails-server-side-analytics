@@ -2,6 +2,8 @@ require "test_helper"
 
 class VisitorFlowTest < ActionDispatch::IntegrationTest
   test "should create visitor and track their events in the background" do
+    enable_analytics
+
     assert_difference -> { Visitor.count } => 1, -> { Event.count } => 1 do
       assert_enqueued_with(job: CreateEventJob) do
         get root_path, headers: {"User-Agent" => "Some User Agent"}
@@ -53,6 +55,8 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "should filter sensative data from params" do
+    enable_analytics
+
     assert_enqueued_with(job: CreateEventJob) do
       post sign_up_path, params: {
         user: {
@@ -69,5 +73,26 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
     assert_equal "[FILTERED]", Event.last.params[:user][:password]
     assert_equal "[FILTERED]", Event.last.params[:user][:password_confirmation]
     assert_equal "[FILTERED]", Event.last.params[:user][:credit_card_number]
+  end
+
+  test "should respects a visitor's privacy" do
+    assert_no_difference ["Visitor.count", "Event.count"] do
+      assert_no_enqueued_jobs do
+        get root_path, headers: {"User-Agent" => "Some User Agent"}
+      end
+    end
+
+    assert_select "button", "Enable Analytics"
+
+    post enable_analytics_path
+
+    assert_difference -> { Visitor.count } => 1, -> { Event.count } => 1 do
+      assert_enqueued_with(job: CreateEventJob) do
+        get root_path, headers: {"User-Agent" => "Some User Agent"}
+      end
+      perform_enqueued_jobs
+    end
+
+    assert_select "button", count: 0, text: "Enable Analytics"
   end
 end
