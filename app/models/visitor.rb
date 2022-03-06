@@ -1,4 +1,5 @@
 class Visitor < ApplicationRecord
+  belongs_to :user, optional: true
   has_many :events
 
   def self.time_on_site

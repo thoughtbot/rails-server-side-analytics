@@ -95,4 +95,54 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
 
     assert_select "button", count: 0, text: "Enable Analytics"
   end
+
+  test "should track conversions if analytics are enabled" do
+    enable_analytics
+
+    perform_enqueued_jobs do
+      get root_path
+
+      assert_difference("User.count") do
+        post sign_up_path, params: {
+          user: {
+            email: "user@example.com"
+          }
+        }
+      end
+
+      assert_equal User.last, Visitor.last.user
+    end
+  end
+
+  test "should not track events if analytics are disabled" do
+    perform_enqueued_jobs do
+      get root_path
+
+      assert_difference("User.count") do
+        post sign_up_path, params: {
+          user: {
+            email: "user@example.com"
+          }
+        }
+      end
+
+      assert_equal 0, Visitor.count
+    end
+  end
+
+  test "should associate user with visitor when user creates a new session if analytics are enabled" do
+    enable_analytics
+
+    @user = User.create!(email: "user@example.com")
+
+    perform_enqueued_jobs do
+      post sign_in_path, params: {
+        user: {
+          email: "user@example.com"
+        }
+      }
+
+      assert_equal @user, Visitor.last.user
+    end
+  end
 end
