@@ -45,4 +45,8 @@ class Visitor < ApplicationRecord
       Arel.sql("EXTRACT(EPOCH FROM (upper_bounds - lower_bounds))")
     )
   end
+
+  def self.delete_all_older_than(timestamp)
+    destroy_by("created_at < ?", timestamp)
+  end
 end

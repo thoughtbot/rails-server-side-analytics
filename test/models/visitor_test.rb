@@ -27,4 +27,25 @@ class VisitorTest < ActiveSupport::TestCase
 
     assert_equal expected_results.sort, Visitor.time_on_site.sort
   end
+
+  test ".delete_all_older_than" do
+    freeze_time
+
+    @visitor_one = Visitor.create!(created_at: 1.week.ago)
+    @visitor_one.events.create!(path: "/", method: "GET")
+    @visitor_two = Visitor.create!
+    @visitor_two.events.create!(path: "/", method: "GET")
+
+    assert_difference -> { Event.count } => -1, -> { Visitor.count } => -1 do
+      Visitor.delete_all_older_than(Time.current)
+    end
+    assert_equal 1, Event.count
+    assert_equal 1, Visitor.count
+
+    assert_difference -> { Event.count } => -1, -> { Visitor.count } => -1 do
+      Visitor.delete_all_older_than(1.week.ago + 1.second.ago)
+    end
+    assert_equal 0, Event.count
+    assert_equal 0, Visitor.count
+  end
 end

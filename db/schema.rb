@@ -39,6 +39,6 @@ ActiveRecord::Schema[7.0].define(version: 2022_03_06_192200) do
     t.index ["user_id"], name: "index_visitors_on_user_id"
   end
 
-  add_foreign_key "events", "visitors"
-  add_foreign_key "visitors", "users"
+  add_foreign_key "events", "visitors", on_delete: :cascade
+  add_foreign_key "visitors", "users", on_delete: :cascade
 end

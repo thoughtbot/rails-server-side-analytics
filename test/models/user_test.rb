@@ -81,4 +81,14 @@ class UserTest < ActiveSupport::TestCase
 
     assert_equal 6, @user.events.count
   end
+
+  test "destroy associated records when destroyed" do
+    @user.save!
+    @visit = @user.visits.create!
+    @visit.events.create!(path: "/", method: "GET")
+
+    assert_difference -> { Event.count } => -1, -> { Visitor.count } => -1 do
+      @user.destroy!
+    end
+  end
 end

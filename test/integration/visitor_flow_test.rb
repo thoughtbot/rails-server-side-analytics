@@ -145,4 +145,30 @@ class VisitorFlowTest < ActionDispatch::IntegrationTest
       assert_equal @user, Visitor.last.user
     end
   end
+
+  test "should delete a user's history" do
+    enable_analytics
+
+    @user = User.create!(email: "user@example.com")
+
+    assert_difference -> { Event.count } => 1, -> { Visitor.count } => 1 do
+      perform_enqueued_jobs do
+        post sign_in_path, params: {
+          user: {
+            email: "user@example.com"
+          }
+        }
+      end
+    end
+
+    assert_difference -> { Event.count } => 1 do
+      perform_enqueued_jobs do
+        get root_path
+      end
+    end
+
+    assert_difference -> { Event.count } => -2, -> { Visitor.count } => -1 do
+      delete clear_history_path
+    end
+  end
 end

@@ -8,4 +8,5 @@ Rails.application.routes.draw do
   post "sign_up", to: "pages#sign_up", as: :sign_up
   post "sign_in", to: "pages#sign_in", as: :sign_in
   post "enable_analytics", to: "analytics#enable", as: :enable_analytics
+  delete "clear_history", to: "analytics#clear_history", as: :clear_history
 end
